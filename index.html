@@ -48,9 +48,17 @@
           <p>
           This map consists of major earthquakes reported in India from 1905 to 2023. The data was obtained from <a href="https://www.ngdc.noaa.gov/hazel/view/hazards/earthquake/search">NCEI</a> (NOAA National Centers for Environmental Information) website. 
           The data is cleaned up and fixed issues with certain data from alternative sources (cited in the references). 
-          The location data is clustered using unsupervised machine learning technique named K - Means Clustering for finding the most frequent locations of earthquakes in India. For that we took 100 KM radius and clustered the number of points came under that circular region. It is found to be the most frequent earthquakes happened in Maharashtra (100 Kms around Satara region). The map points are colour coded according to the strength of quake (Richter Scale Classification) 
-          and two filters are provided for Frequency wise and Richter Classification wise.
-          <br/>
+          The location data is clustered using unsupervised machine learning technique named K - Means Clustering for finding the most frequent locations of earthquakes in India. For that we took 100 KM radius and clustered the number of points came under that circular region. 
+          <ul>
+            <li>
+              It is found to be the most frequent earthquakes happened in Maharashtra (100 Kms around Satara region).
+            </li>
+            <li>
+              Gujarat, Kashmir, Utharkhand, Manipur and Andaman regions are more prone to earthquakes than other parts of India.
+            </li>
+          </ul>
+           
+          The map points are colour coded according to the strength of quake (Richter Scale Classification) and two filters are provided for Frequency wise and Richter Classification wise.
           This map is helpful in identifying the distribution of earthquakes happened all over India by providing an overall distribution.
           <br/><br/>
           The map was generated using QGIS (version 3.22.16-Białowieża) and qgis2web plugin. Overlay map used is Openstreetmap.
@@ -58,6 +66,9 @@
         <p>
           <li>
           <b><font color="red">Click on the points</font></b> to get popup information on Date of earth quake, Place name, magnitude, deaths and damages.
+        </li>
+        <li>
+          <b><font color="red">Use the filters</font></b> on right to filter out frequency wise as well as Magnitude classification wise.
         </li>
         </p>
         </div>
