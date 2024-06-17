@@ -115,7 +115,7 @@
         }
         var map = L.map('map', {
             zoomControl:false, maxZoom:28, minZoom:4
-        }).fitBounds([[-6.200409182837623,61.34599651287557],[37.92097599287407,112.7869836373389]]);
+        }).fitBounds([[-4.648493072429112,46.17056732832786],[39.14044712841974,129.58473041845673]]);
         var hash = new L.Hash(map);
         map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
         var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
@@ -208,23 +208,23 @@
                     </tr>\
                     <tr>\
                         <th scope="row">Deaths</th>\
-                        <td>' + (feature.properties['Deaths'] !== null ? autolinker.link(feature.properties['Deaths'].toLocaleString()) : '') + '</td>\
+                        <td class="visible-with-data" id="Deaths">' + (feature.properties['Deaths'] !== null ? autolinker.link(feature.properties['Deaths'].toLocaleString()) : '') + '</td>\
                     </tr>\
                     <tr>\
                         <th scope="row">Injuries</th>\
-                        <td>' + (feature.properties['Injuries'] !== null ? autolinker.link(feature.properties['Injuries'].toLocaleString()) : '') + '</td>\
+                        <td class="visible-with-data" id="Injuries">' + (feature.properties['Injuries'] !== null ? autolinker.link(feature.properties['Injuries'].toLocaleString()) : '') + '</td>\
                     </tr>\
                     <tr>\
                         <th scope="row">Damage in $</th>\
-                        <td>' + (feature.properties['Damage in $'] !== null ? autolinker.link(feature.properties['Damage in $'].toLocaleString()) : '') + '</td>\
+                        <td class="visible-with-data" id="Damage in $">' + (feature.properties['Damage in $'] !== null ? autolinker.link(feature.properties['Damage in $'].toLocaleString()) : '') + '</td>\
                     </tr>\
                     <tr>\
                         <th scope="row">Houses Destroyed</th>\
-                        <td>' + (feature.properties['Houses Destroyed'] !== null ? autolinker.link(feature.properties['Houses Destroyed'].toLocaleString()) : '') + '</td>\
+                        <td class="visible-with-data" id="Houses Destroyed">' + (feature.properties['Houses Destroyed'] !== null ? autolinker.link(feature.properties['Houses Destroyed'].toLocaleString()) : '') + '</td>\
                     </tr>\
                     <tr>\
                         <th scope="row">Houses Damaged</th>\
-                        <td>' + (feature.properties['Houses Damaged'] !== null ? autolinker.link(feature.properties['Houses Damaged'].toLocaleString()) : '') + '</td>\
+                        <td class="visible-with-data" id="Houses Damaged">' + (feature.properties['Houses Damaged'] !== null ? autolinker.link(feature.properties['Houses Damaged'].toLocaleString()) : '') + '</td>\
                     </tr>\
                 </table>';
             var content = removeEmptyRowsFromPopupContent(popupContent, feature);
