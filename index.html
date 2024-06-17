@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/filter.css">
+<link rel="stylesheet" href="css/nouislider.min.css">
+        <style>
+        #map {
+            width: 763px;
+            height: 701px;
+        }
+        hr {
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid #ccc;
+    margin: 1em 0;
+    padding: 0;
+}
+        </style>
+        <title></title>
+    </head>
+    <body>
+
+      <nav class="navbar bg-body-tertiary">
+        <div class="container-fluid">
+          <span class="navbar-brand mb-0 h1">Earthquakes in India from 1905 to 2023</span>
+        </div>
+      </nav>
+      <br/>
+      <div class="container">
+        <div class="row">
+          <p>
+          This map consists of major earthquakes reported in India from 1905 to 2023. The data was obtained from <a href="https://www.ngdc.noaa.gov/hazel/view/hazards/earthquake/search">NCEI</a> (NOAA National Centers for Environmental Information) website. 
+          The data is cleaned up and fixed issues with certain data from alternative sources (cited in the references). 
+          The location data is clustered using K- Means Clustering for finding the most frequent locations of earthquakes in India. For that we took 100 KM radius and clustered the number of points came under that circular region. It is found to be the most frequent earthquakes happened in Maharashtra (100 Kms around Satara region). The map points are colour coded according to the strength of quake (Richter Scale Classification) 
+          and two filters are provided for Frequency wise and Richter Classification wise.
+          <br/><br/>
+          The map was generated using QGIS (version 3.22.16-Białowieża).
+        </p>
+        <p>
+          <li>
+          <b><font color="red">Click on the points</font></b> to get popup information on Date of earth quake, Place name, magnitude, deaths and damages.
+        </li>
+        </p>
+        </div>
+      </div>
+      <div class="container">
+        <div class="row">
+          <div id="map">
+        </div>
+        </div>
+        </div>
+        <br/>
+        <br/>
+        <div class="container">
+          <div class="row">
+        <H2>References:</H2>
+
+        <li>National Geophysical Data Center / World Data Service (NGDC/WDS): NCEI/WDS Global Significant Earthquake Database. NOAA National Centers for Environmental Information. doi:<a href>10.7289/V5TD9V7K</a>
+        </li>
+        <li>
+          Singh, Shri Krishna & Suresh, G. & Dattatrayam, R. & Shukla, H. & Martin, Stacey & Havskov, J. & Pérez-Campos, Xyoli & Iglesias, Arturo. (2013). 1960 Delhi earthquake: Epicentre, depth and magnitude. Current science. 105. 1155-1165. 
+        </li>
+        <li>
+          Agwul, Abong. (2014). Earthquake distribution in India from 1961 to 2010. 
+        </li>
+        <li>
+          ChatGPT for generating necessary python codes.
+        </li>
+        </div>
+        <br/><br/><br/>
+        <hr/>
+        <footer>Created by Straw hat Pirates</footer>
+      </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/tailDT.js"></script>
+<script src="js/nouislider.min.js"></script>
+<script src="js/wNumb.js"></script>
+        <script src="data/earthquakes_data_1.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString' || e.target.feature.geometry.type === 'MultiLineString') {
+              highlightLayer.setStyle({
+                color: '#ffff00',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: '#ffff00',
+                fillOpacity: 1
+              });
+            }
+        }
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:4
+        }).fitBounds([[-6.200409182837623,61.34599651287557],[37.92097599287407,112.7869836373389]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // add class to format popup if it contains media
+		function addClassToPopupIfMedia(content, popup) {
+			var tempDiv = document.createElement('div');
+			tempDiv.innerHTML = content;
+			if (tempDiv.querySelector('td img')) {
+				popup._contentNode.classList.add('media');
+					// Delay to force the redraw
+					setTimeout(function() {
+						popup.update();
+					}, 10);
+			} else {
+				popup._contentNode.classList.remove('media');
+			}
+		}
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_OpenStreetMap_0');
+        map.getPane('pane_OpenStreetMap_0').style.zIndex = 400;
+        var layer_OpenStreetMap_0 = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OpenStreetMap_0',
+            opacity: 1.0,
+            attribution: '',
+            minZoom: 4,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        });
+        layer_OpenStreetMap_0;
+        map.addLayer(layer_OpenStreetMap_0);
+        function pop_earthquakes_data_1(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Year</th>\
+                        <td>' + (feature.properties['Year'] !== null ? autolinker.link(feature.properties['Year'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Month</th>\
+                        <td>' + (feature.properties['Mo'] !== null ? autolinker.link(feature.properties['Mo'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Day</th>\
+                        <td>' + (feature.properties['Dy'] !== null ? autolinker.link(feature.properties['Dy'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Location</th>\
+                        <td>' + (feature.properties['Location'] !== null ? autolinker.link(feature.properties['Location'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Frequency</th>\
+                        <td>' + (feature.properties['Frequency'] !== null ? autolinker.link(feature.properties['Frequency'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Magnitude</th>\
+                        <td>' + (feature.properties['Mag'] !== null ? autolinker.link(feature.properties['Mag'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Ritcher Class</th>\
+                        <td>' + (feature.properties['Richter Classification'] !== null ? autolinker.link(feature.properties['Richter Classification'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Deaths</th>\
+                        <td>' + (feature.properties['Deaths'] !== null ? autolinker.link(feature.properties['Deaths'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Injuries</th>\
+                        <td>' + (feature.properties['Injuries'] !== null ? autolinker.link(feature.properties['Injuries'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Damage in $</th>\
+                        <td>' + (feature.properties['Damage in $'] !== null ? autolinker.link(feature.properties['Damage in $'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Houses Destroyed</th>\
+                        <td>' + (feature.properties['Houses Destroyed'] !== null ? autolinker.link(feature.properties['Houses Destroyed'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Houses Damaged</th>\
+                        <td>' + (feature.properties['Houses Damaged'] !== null ? autolinker.link(feature.properties['Houses Damaged'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_earthquakes_data_1_0(feature) {
+            switch(String(feature.properties['Richter Classification'])) {
+                case 'Minor':
+                    return {
+                pane: 'pane_earthquakes_data_1',
+                radius: 8.0,
+                opacity: 1,
+                color: 'rgba(50,87,128,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(48,18,59,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Light':
+                    return {
+                pane: 'pane_earthquakes_data_1',
+                radius: 8.0,
+                opacity: 1,
+                color: 'rgba(50,87,128,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(62,156,254,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Moderate':
+                    return {
+                pane: 'pane_earthquakes_data_1',
+                radius: 8.0,
+                opacity: 1,
+                color: 'rgba(50,87,128,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(72,248,130,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Strong':
+                    return {
+                pane: 'pane_earthquakes_data_1',
+                radius: 8.0,
+                opacity: 1,
+                color: 'rgba(50,87,128,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(226,220,56,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Major':
+                    return {
+                pane: 'pane_earthquakes_data_1',
+                radius: 8.0,
+                opacity: 1,
+                color: 'rgba(50,87,128,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(239,89,17,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Great':
+                    return {
+                pane: 'pane_earthquakes_data_1',
+                radius: 8.0,
+                opacity: 1,
+                color: 'rgba(50,87,128,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(122,4,3,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_earthquakes_data_1');
+        map.getPane('pane_earthquakes_data_1').style.zIndex = 401;
+        map.getPane('pane_earthquakes_data_1').style['mix-blend-mode'] = 'normal';
+        var layer_earthquakes_data_1 = new L.geoJson(json_earthquakes_data_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_earthquakes_data_1',
+            layerName: 'layer_earthquakes_data_1',
+            pane: 'pane_earthquakes_data_1',
+            onEachFeature: pop_earthquakes_data_1,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_earthquakes_data_1_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_earthquakes_data_1);
+        map.addLayer(layer_earthquakes_data_1);
+        var baseMaps = {};
+        var overlaysTree = [
+            {label: 'earthquakes_data<br /><table><tr><td style="text-align: center;"><img src="legend/earthquakes_data_1_Minor0.png" /></td><td>Minor</td></tr><tr><td style="text-align: center;"><img src="legend/earthquakes_data_1_Light1.png" /></td><td>Light</td></tr><tr><td style="text-align: center;"><img src="legend/earthquakes_data_1_Moderate2.png" /></td><td>Moderate</td></tr><tr><td style="text-align: center;"><img src="legend/earthquakes_data_1_Strong3.png" /></td><td>Strong</td></tr><tr><td style="text-align: center;"><img src="legend/earthquakes_data_1_Major4.png" /></td><td>Major</td></tr><tr><td style="text-align: center;"><img src="legend/earthquakes_data_1_Great5.png" /></td><td>Great</td></tr></table>', layer: layer_earthquakes_data_1},
+            {label: "OpenStreetMap", layer: layer_OpenStreetMap_0},]
+        var lay = L.control.layers.tree(null, overlaysTree,{
+            //namedToggle: true,
+            //selectorBack: false,
+            //closedSymbol: '&#8862; &#x1f5c0;',
+            //openedSymbol: '&#8863; &#x1f5c1;',
+            //collapseAll: 'Collapse all',
+            //expandAll: 'Expand all',
+            collapsed: false, 
+        });
+        lay.addTo(map);
+        setBounds();
+        var mapDiv = document.getElementById('map');
+        var row = document.createElement('div');
+        row.className="row";
+        row.id="all";
+        row.style.height = "100%";
+        var col1 = document.createElement('div');
+        col1.className="col9";
+        col1.id = "mapWindow";
+        col1.style.height = "99%";
+        col1.style.width = "80%";
+        col1.style.display = "inline-block";
+        var col2 = document.createElement('div');
+        col2.className="col3";
+        col2.id = "menu";
+        col2.style.display = "inline-block";
+        mapDiv.parentNode.insertBefore(row, mapDiv);
+        document.getElementById("all").appendChild(col1);
+        document.getElementById("all").appendChild(col2);
+        col1.appendChild(mapDiv)
+        var Filters = {"Frequency": "str","Richter Classification": "str"};
+        function filterFunc() {
+          map.eachLayer(function(lyr){
+          if ("options" in lyr && "dataVar" in lyr["options"]){
+            features = this[lyr["options"]["dataVar"]].features.slice(0);
+            try{
+              for (key in Filters){
+                keyS = key.replace(/[^a-zA-Z0-9_]/g, "")
+                if (Filters[key] == "str" || Filters[key] == "bool"){
+                  var selection = [];
+                  var options = document.getElementById("sel_" + keyS).options
+                  for (var i=0; i < options.length; i++) {
+                    if (options[i].selected) selection.push(options[i].value);
+                  }
+                    try{
+                      if (key in features[0].properties){
+                        for (i = features.length - 1;
+                          i >= 0; --i){
+                          if (selection.indexOf(
+                          features[i].properties[key])<0
+                          && selection.length>0) {
+                          features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                  }
+                }
+                if (Filters[key] == "int"){
+                  sliderVals =  document.getElementById(
+                    "div_" + keyS).noUiSlider.get();
+                  try{
+                    if (key in features[0].properties){
+                    for (i = features.length - 1; i >= 0; --i){
+                      if (parseInt(features[i].properties[key])
+                          < sliderVals[0]
+                          || parseInt(features[i].properties[key])
+                          > sliderVals[1]){
+                            features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                    }
+                  }
+                if (Filters[key] == "real"){
+                  sliderVals =  document.getElementById(
+                    "div_" + keyS).noUiSlider.get();
+                  try{
+                    if (key in features[0].properties){
+                    for (i = features.length - 1; i >= 0; --i){
+                      if (features[i].properties[key]
+                          < sliderVals[0]
+                          || features[i].properties[key]
+                          > sliderVals[1]){
+                            features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                    }
+                  }
+                if (Filters[key] == "date"
+                  || Filters[key] == "datetime"
+                  || Filters[key] == "time"){
+                  try{
+                    if (key in features[0].properties){
+                      HTMLkey = key.replace(/[&\/\\#,+()$~%.'":*?<>{} ]/g, '');
+                      startdate = document.getElementById("dat_" +
+                        HTMLkey + "_date1").value.replace(" ", "T");
+                      enddate = document.getElementById("dat_" +
+                        HTMLkey + "_date2").value.replace(" ", "T");
+                      for (i = features.length - 1; i >= 0; --i){
+                        if (features[i].properties[key] < startdate
+                          || features[i].properties[key] > enddate){
+                          features.splice(i,1);
+                        }
+                      }
+                    }
+                  } catch(err){
+                  }
+                }
+              }
+            } catch(err){
+            }
+          this[lyr["options"]["layerName"]].clearLayers();
+          this[lyr["options"]["layerName"]].addData(features);
+          }
+          })
+        }
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_Frequency = document.createElement('div');
+            div_Frequency.id = "div_Frequency";
+            div_Frequency.className= "filterselect";
+            document.getElementById("menu").appendChild(div_Frequency);
+            sel_Frequency = document.createElement('select');
+            sel_Frequency.multiple = true;
+            sel_Frequency.size = 3;
+            sel_Frequency.id = "sel_Frequency";
+            var Frequency_options_str = "<option value='' unselected></option>";
+            sel_Frequency.onchange = function(){filterFunc()};
+            Frequency_options_str  += '<option value="Frequent">Frequent</option>';
+            Frequency_options_str  += '<option value="Less Frequent">Less Frequent</option>';
+            Frequency_options_str  += '<option value="Very Frequent">Very Frequent</option>';
+            sel_Frequency.innerHTML = Frequency_options_str;
+            div_Frequency.appendChild(sel_Frequency);
+            var lab_Frequency = document.createElement('div');
+            lab_Frequency.innerHTML = 'Frequency';
+            lab_Frequency.className = 'filterlabel';
+            div_Frequency.appendChild(lab_Frequency);
+            var reset_Frequency = document.createElement('div');
+            reset_Frequency.innerHTML = 'clear filter';
+            reset_Frequency.className = 'filterlabel';
+            reset_Frequency.onclick = function() {
+                var options = document.getElementById("sel_Frequency").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_Frequency.appendChild(reset_Frequency);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_RichterClassification = document.createElement('div');
+            div_RichterClassification.id = "div_RichterClassification";
+            div_RichterClassification.className= "filterselect";
+            document.getElementById("menu").appendChild(div_RichterClassification);
+            sel_RichterClassification = document.createElement('select');
+            sel_RichterClassification.multiple = true;
+            sel_RichterClassification.size = 6;
+            sel_RichterClassification.id = "sel_RichterClassification";
+            var RichterClassification_options_str = "<option value='' unselected></option>";
+            sel_RichterClassification.onchange = function(){filterFunc()};
+            RichterClassification_options_str  += '<option value="Great">Great</option>';
+            RichterClassification_options_str  += '<option value="Light">Light</option>';
+            RichterClassification_options_str  += '<option value="Major">Major</option>';
+            RichterClassification_options_str  += '<option value="Minor">Minor</option>';
+            RichterClassification_options_str  += '<option value="Moderate">Moderate</option>';
+            RichterClassification_options_str  += '<option value="Strong">Strong</option>';
+            sel_RichterClassification.innerHTML = RichterClassification_options_str;
+            div_RichterClassification.appendChild(sel_RichterClassification);
+            var lab_RichterClassification = document.createElement('div');
+            lab_RichterClassification.innerHTML = 'Richter Classification';
+            lab_RichterClassification.className = 'filterlabel';
+            div_RichterClassification.appendChild(lab_RichterClassification);
+            var reset_RichterClassification = document.createElement('div');
+            reset_RichterClassification.innerHTML = 'clear filter';
+            reset_RichterClassification.className = 'filterlabel';
+            reset_RichterClassification.onclick = function() {
+                var options = document.getElementById("sel_RichterClassification").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_RichterClassification.appendChild(reset_RichterClassification);
+        </script>
+    </body>
+</html>
