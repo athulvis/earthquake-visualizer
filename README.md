@@ -1,5 +1,7 @@
 # Indian Earthquake Visualizer
 
+Created as part of HOT OSM Challege 2024. 
+
 ## [Demo](https://earthquake-visualizer-india.netlify.app/#4/10.27/78.35)
 
 This map consists of major earthquakes reported in India from 1905 to 2023. The data was obtained from NCEI (NOAA National Centers for Environmental Information) website. The data is cleaned up and fixed issues with certain data from alternative sources (cited in the references). The location data is clustered using K- Means Clustering for finding the most frequent locations of earthquakes in India. For that we took 100 KM radius and clustered the number of points came under that circular region. It is found to be the most frequent earthquakes happened in Maharashtra (100 Kms around Satara region). The map points are colour coded according to the strength of quake (Richter Scale Classification) and two filters are provided for Frequency wise and Richter Classification wise.
